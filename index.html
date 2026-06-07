@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0057B8" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Wandin Match Stats</title>
+  <style>
+    :root {
+      --wandin-blue: #0057B8;
+      --dark-navy: #07111F;
+      --panel: #FFFFFF;
+      --background: #F3F5F8;
+      --text: #161A22;
+      --muted: #6B7280;
+      --line: #E2E7EF;
+      --oppo: #30343B;
+      --plus: #128A45;
+      --minus: #C73535;
+      --warning: #D97706;
+      --danger: #B91C1C;
+      --shadow: 0 14px 36px rgba(7, 17, 31, 0.12);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--background);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      touch-action: manipulation;
+    }
+    body { padding: 18px; }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; border: none; touch-action: manipulation; }
+    .app { max-width: 1120px; margin: 0 auto; }
+
+    .top-brand {
+      background: linear-gradient(135deg, var(--dark-navy), #0D2442 62%, var(--wandin-blue));
+      color: white;
+      border-radius: 24px;
+      padding: 22px 26px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+    .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+    .brand-title { font-size: 30px; font-weight: 900; letter-spacing: 0.03em; text-transform: uppercase; margin: 0; }
+    .brand-subtitle { font-size: 18px; font-weight: 700; opacity: 0.9; margin-top: 6px; }
+    .status-pill {
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.24);
+      color: white;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 800;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .panel {
+      background: var(--panel);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+      border: 1px solid rgba(226,231,239,0.9);
+    }
+
+    .setup-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 14px;
+      font-weight: 850;
+      color: var(--dark-navy);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    input, select, textarea {
+      width: 100%;
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 14px;
+      font-size: 18px;
+      font-weight: 650;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+    }
+    textarea { min-height: 82px; resize: vertical; }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--wandin-blue);
+      box-shadow: 0 0 0 4px rgba(0,87,184,0.12);
+    }
+
+    .section-title {
+      margin: 24px 0 12px;
+      font-size: 18px;
+      font-weight: 950;
+      color: var(--dark-navy);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .helper {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1.35;
+      margin: 6px 0 12px;
+    }
+
+    .check-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .check-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: 800;
+      background: #fff;
+      user-select: none;
+    }
+    .check-card input { width: 22px; height: 22px; accent-color: var(--wandin-blue); flex: 0 0 auto; }
+
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; justify-content: center; }
+    .primary-btn, .secondary-btn, .danger-btn, .warning-btn {
+      min-height: 54px;
+      padding: 0 20px;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: 900;
+    }
+    .primary-btn { background: var(--wandin-blue); color: white; }
+    .secondary-btn { background: #E9EEF6; color: var(--dark-navy); }
+    .warning-btn { background: var(--warning); color: white; }
+    .danger-btn { background: var(--danger); color: white; }
+
+    .live-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(243,245,248,0.96);
+      backdrop-filter: blur(8px);
+      padding-bottom: 12px;
+    }
+    .control-panel {
+      background: var(--panel);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .match-row { display: flex; justify-content: space-between; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .match-title { font-size: 22px; font-weight: 950; color: var(--dark-navy); }
+    .last-action { font-size: 15px; font-weight: 750; color: var(--muted); }
+
+    .quarter-row, .tab-row { display: grid; gap: 10px; margin-top: 10px; }
+    .quarter-row { grid-template-columns: repeat(4, 1fr) 1.25fr; }
+    .tab-row { grid-template-columns: 1fr 1fr; }
+    .quarter-btn, .tab-btn, .undo-btn {
+      min-height: 56px;
+      border-radius: 15px;
+      font-size: 20px;
+      font-weight: 950;
+      background: #E9EEF6;
+      color: var(--dark-navy);
+      border: 2px solid transparent;
+    }
+    .quarter-btn.active, .tab-btn.active {
+      background: var(--wandin-blue);
+      color: white;
+      box-shadow: 0 8px 18px rgba(0,87,184,0.24);
+    }
+    .undo-btn { background: var(--dark-navy); color: white; font-size: 17px; }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 950;
+      color: var(--dark-navy);
+      margin: 18px 0 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .table-head, .stat-row, .eff-row {
+      display: grid;
+      grid-template-columns: minmax(230px, 40%) minmax(220px, 30%) minmax(220px, 30%);
+      align-items: center;
+      gap: 14px;
+    }
+    .table-head {
+      padding: 0 16px 8px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .team-head.wandin { color: var(--wandin-blue); }
+    .team-head.oppo { color: var(--oppo); }
+
+    .stat-row, .eff-row {
+      min-height: 72px;
+      padding: 9px 14px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: #fff;
+      margin-bottom: 9px;
+    }
+    .stat-row:nth-child(even) { background: #FBFCFE; }
+    .stat-name { font-size: 21px; font-weight: 900; color: var(--dark-navy); }
+
+    .counter {
+      display: grid;
+      grid-template-columns: 64px minmax(54px, 1fr) 78px;
+      gap: 8px;
+      align-items: center;
+    }
+    .count-num {
+      text-align: center;
+      font-size: 29px;
+      font-weight: 950;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .count-btn {
+      min-height: 58px;
+      border-radius: 14px;
+      color: white;
+      font-size: 32px;
+      font-weight: 950;
+      line-height: 1;
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.18);
+    }
+    .minus { background: var(--minus); }
+    .plus { background: var(--plus); }
+
+    .eff-row {
+      background: linear-gradient(90deg, #F7FAFF, #FFFFFF);
+      border: 2px solid rgba(0,87,184,0.18);
+    }
+    .eff-label { font-size: 21px; font-weight: 950; color: var(--dark-navy); }
+    .eff-value {
+      font-size: 30px;
+      font-weight: 950;
+      text-align: center;
+      color: var(--wandin-blue);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hidden { display: none !important; }
+    .review-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+    .review-card { border: 1px solid var(--line); border-radius: 18px; padding: 16px; background: #fff; }
+    .review-card h3 { margin: 0 0 8px; color: var(--dark-navy); }
+    .review-card p { margin: 5px 0; color: var(--muted); font-weight: 700; }
+
+    @media (max-width: 850px) {
+      body { padding: 10px; }
+      .setup-grid, .check-grid, .review-grid { grid-template-columns: 1fr; }
+      .quarter-row { grid-template-columns: repeat(2, 1fr); }
+      .undo-btn { grid-column: 1 / -1; }
+      .table-head { display: none; }
+      .stat-row, .eff-row { grid-template-columns: 1fr; gap: 10px; }
+      .counter { grid-template-columns: 70px 1fr 88px; }
+    }
+
+    @media (orientation: portrait) { .portrait-warning { display: block; } }
+    @media (orientation: landscape) { .portrait-warning { display: none; } }
+    .portrait-warning {
+      background: #FFF7ED;
+      color: #9A3412;
+      border: 2px solid #FDBA74;
+      border-radius: 14px;
+      padding: 12px;
+      font-weight: 850;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="portrait-warning">For best use, turn the iPad sideways into landscape mode.</div>
+
+    <header class="top-brand">
+      <div class="brand-row">
+        <div>
+          <h1 class="brand-title">Wandin Match Stats</h1>
+          <div class="brand-subtitle" id="brandSubtitle">Simple offline game-day counter</div>
+        </div>
+        <div class="status-pill" id="saveStatus">Saved locally</div>
+      </div>
+    </header>
+
+    <main id="setupScreen" class="panel">
+      <h2 class="page-title">Match Setup</h2>
+      <p class="helper">Before the game: set the iPad to landscape, set Auto-Lock to Never or the longest available time, and test the app in Airplane Mode.</p>
+
+      <div class="setup-grid">
+        <div class="field"><label for="opponent">Opposition</label><input id="opponent" placeholder="e.g. Narre Warren" /></div>
+        <div class="field"><label for="matchDate">Date</label><input id="matchDate" type="date" /></div>
+        <div class="field"><label for="venue">Venue</label><select id="venue"><option>Home</option><option>Away</option><option>Neutral</option></select></div>
+        <div class="field"><label for="grade">Grade</label><select id="grade"><option>Seniors</option><option>Reserves</option><option>Other</option></select></div>
+        <div class="field full"><label for="notes">Notes</label><textarea id="notes" placeholder="Optional notes for this match"></textarea></div>
+      </div>
+
+      <h3 class="section-title">Custom Stats</h3>
+      <p class="helper">Leave blank if not needed. Custom stats are hidden by default unless named or selected below.</p>
+      <div class="setup-grid">
+        <div class="field"><label for="custom1">Custom Stat 1</label><input id="custom1" /></div>
+        <div class="field"><label for="custom2">Custom Stat 2</label><input id="custom2" /></div>
+        <div class="field"><label for="custom3">Custom Stat 3</label><input id="custom3" /></div>
+        <div class="field"><label for="custom4">Custom Stat 4</label><input id="custom4" /></div>
+        <div class="field"><label for="custom5">Custom Stat 5</label><input id="custom5" /></div>
+      </div>
+
+      <h3 class="section-title">Stats to Use This Game</h3>
+      <p class="helper">Untick a stat to hide it for this match only. This does not permanently delete it.</p>
+      <div id="statChecks"></div>
+
+      <div class="actions">
+        <button class="primary-btn" onclick="startMatch()">Start Match</button>
+        <button class="secondary-btn" onclick="showLive()">Resume Saved Match</button>
+        <button class="secondary-btn" onclick="showReview()">Export / Review</button>
+        <button class="danger-btn" onclick="resetApp()">Reset App</button>
+      </div>
+    </main>
+
+    <main id="liveScreen" class="hidden">
+      <div class="live-header">
+        <div class="control-panel">
+          <div class="match-row">
+            <div>
+              <div class="match-title" id="liveMatchTitle">Wandin v Opposition</div>
+              <div class="last-action" id="lastAction">Last: none</div>
+            </div>
+            <button class="secondary-btn" onclick="showSetup()">Edit Match Setup</button>
+          </div>
+          <div class="quarter-row">
+            <button class="quarter-btn active" id="q1Btn" onclick="switchQuarter('Q1')">Q1</button>
+            <button class="quarter-btn" id="q2Btn" onclick="switchQuarter('Q2')">Q2</button>
+            <button class="quarter-btn" id="q3Btn" onclick="switchQuarter('Q3')">Q3</button>
+            <button class="quarter-btn" id="q4Btn" onclick="switchQuarter('Q4')">Q4</button>
+            <button class="undo-btn" onclick="undoLast()">Undo Last Tap</button>
+          </div>
+          <div class="tab-row">
+            <button class="tab-btn active" id="gameFlowTab" onclick="setPage('gameFlow')">Game Flow</button>
+            <button class="tab-btn" id="marksTab" onclick="setPage('marksCustom')">Marks / Custom</button>
+          </div>
+        </div>
+      </div>
+
+      <section class="panel">
+        <h2 class="page-title" id="livePageTitle">Game Flow</h2>
+        <div class="table-head"><div>Stat</div><div class="team-head wandin">Wandin</div><div class="team-head oppo">Oppo</div></div>
+        <div id="statsContainer"></div>
+        <div class="actions"><button class="primary-btn" onclick="showReview()">Export / Review</button></div>
+      </section>
+    </main>
+
+    <main id="reviewScreen" class="panel hidden">
+      <h2 class="page-title">Export / Review</h2>
+      <p class="helper">Export creates a CSV with quarter-by-quarter stats, totals, scoring efficiency, and the tap log.</p>
+      <div id="reviewSummary" class="review-grid"></div>
+      <div class="actions">
+        <button class="primary-btn" onclick="exportCSV()">Export CSV</button>
+        <button class="secondary-btn" onclick="showLive()">Back to Live Stats</button>
+        <button class="warning-btn" onclick="newMatch()">Start New Match</button>
+        <button class="danger-btn" onclick="resetApp()">Reset App</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "wandinMatchStatsV1";
+    const STAT_DEFS = [
+      { id: "f50Entry", name: "F50 Entry", page: "gameFlow", group: "Game Flow", standard: true },
+      { id: "helpSideEntry", name: "Help Side Entry", page: "gameFlow", group: "Game Flow", standard: true },
+      { id: "fourPlusChain", name: "4+ Ball Chain", page: "gameFlow", group: "Game Flow", standard: true },
+      { id: "forwardHandball", name: "Forward Handball", page: "gameFlow", group: "Game Flow", standard: true },
+      { id: "laneChanges", name: "Lane Changes", page: "gameFlow", group: "Game Flow", standard: true },
+      { id: "tackles", name: "Tackles", page: "gameFlow", group: "Game Flow", standard: true },
+      { id: "aerial2v1", name: "Aerial 2 v 1", page: "gameFlow", group: "Game Flow", standard: true },
+      { id: "goals", name: "Goals", page: "gameFlow", group: "Scoring", standard: true },
+      { id: "behinds", name: "Behinds", page: "gameFlow", group: "Scoring", standard: true },
+      { id: "marksInside50", name: "Marks Inside 50", page: "marksCustom", group: "Marks", standard: true },
+      { id: "uncontestedMarks", name: "Uncontested Marks", page: "marksCustom", group: "Marks", standard: true },
+      { id: "interceptMark", name: "Intercept Mark", page: "marksCustom", group: "Marks", standard: true },
+      { id: "launchZoneMarks", name: "Launch Zone Marks", page: "marksCustom", group: "Marks", standard: true },
+      { id: "corridorMark", name: "Corridor Mark", page: "marksCustom", group: "Marks", standard: true },
+      { id: "custom1", name: "Custom Stat 1", page: "marksCustom", group: "Custom", standard: false },
+      { id: "custom2", name: "Custom Stat 2", page: "marksCustom", group: "Custom", standard: false },
+      { id: "custom3", name: "Custom Stat 3", page: "marksCustom", group: "Custom", standard: false },
+      { id: "custom4", name: "Custom Stat 4", page: "marksCustom", group: "Custom", standard: false },
+      { id: "custom5", name: "Custom Stat 5", page: "marksCustom", group: "Custom", standard: false }
+    ];
+    const QUARTERS = ["Q1", "Q2", "Q3", "Q4"];
+    const TEAMS = ["Wandin", "Oppo"];
+    let state = loadState() || createFreshState();
+
+    function createFreshState() {
+      const today = new Date().toISOString().slice(0, 10);
+      const counts = {}, activeStats = {}, customNames = {};
+      STAT_DEFS.forEach(stat => {
+        counts[stat.id] = {};
+        QUARTERS.forEach(q => counts[stat.id][q] = { Wandin: 0, Oppo: 0 });
+        activeStats[stat.id] = stat.standard;
+        if (!stat.standard) customNames[stat.id] = "";
+      });
+      return {
+        match: { opponent: "", date: today, venue: "Home", grade: "Seniors", notes: "" },
+        currentQuarter: "Q1",
+        activePage: "gameFlow",
+        counts,
+        activeStats,
+        customNames,
+        history: [],
+        lastActionText: "Last: none"
+      };
+    }
+
+    function loadState() {
+      try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : null; }
+      catch { return null; }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const el = document.getElementById("saveStatus");
+      if (el) el.textContent = "Saved locally";
+    }
+
+    function hydrateForm() {
+      document.getElementById("opponent").value = state.match.opponent || "";
+      document.getElementById("matchDate").value = state.match.date || new Date().toISOString().slice(0, 10);
+      document.getElementById("venue").value = state.match.venue || "Home";
+      document.getElementById("grade").value = state.match.grade || "Seniors";
+      document.getElementById("notes").value = state.match.notes || "";
+      ["custom1","custom2","custom3","custom4","custom5"].forEach(id => document.getElementById(id).value = state.customNames[id] || "");
+      renderStatChecks();
+    }
+
+    function readFormIntoState() {
+      state.match.opponent = document.getElementById("opponent").value.trim();
+      state.match.date = document.getElementById("matchDate").value;
+      state.match.venue = document.getElementById("venue").value;
+      state.match.grade = document.getElementById("grade").value;
+      state.match.notes = document.getElementById("notes").value.trim();
+      ["custom1","custom2","custom3","custom4","custom5"].forEach(id => {
+        const val = document.getElementById(id).value.trim();
+        state.customNames[id] = val;
+        if (val && !state.activeStats[id]) state.activeStats[id] = true;
+      });
+      STAT_DEFS.forEach(stat => {
+        const checkbox = document.getElementById("check_" + stat.id);
+        if (checkbox) state.activeStats[stat.id] = checkbox.checked;
+      });
+      saveState();
+    }
+
+    function renderStatChecks() {
+      const container = document.getElementById("statChecks");
+      container.innerHTML = "";
+      ["Game Flow", "Scoring", "Marks", "Custom"].forEach(group => {
+        const groupStats = STAT_DEFS.filter(s => s.group === group);
+        const title = document.createElement("h4");
+        title.className = "section-title";
+        title.textContent = group;
+        container.appendChild(title);
+        const grid = document.createElement("div");
+        grid.className = "check-grid";
+        groupStats.forEach(stat => {
+          const label = document.createElement("label");
+          label.className = "check-card";
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.id = "check_" + stat.id;
+          input.checked = !!state.activeStats[stat.id];
+          const span = document.createElement("span");
+          span.textContent = displayName(stat);
+          label.appendChild(input);
+          label.appendChild(span);
+          grid.appendChild(label);
+        });
+        container.appendChild(grid);
+      });
+    }
+
+    function displayName(stat) {
+      if (stat.id.startsWith("custom")) return state.customNames[stat.id] || stat.name;
+      return stat.name;
+    }
+
+    function startMatch() {
+      readFormIntoState();
+      if (!state.match.opponent) { alert("Please type the opposition name before starting."); return; }
+      showLive();
+    }
+
+    function showSetup() { hydrateForm(); showOnly("setupScreen"); }
+    function showLive() { readFormIntoStateSafe(); updateHeader(); renderLive(); showOnly("liveScreen"); }
+    function showReview() { readFormIntoStateSafe(); renderReview(); showOnly("reviewScreen"); }
+    function readFormIntoStateSafe() { try { if (document.getElementById("opponent")) readFormIntoState(); } catch {} }
+
+    function showOnly(id) {
+      ["setupScreen","liveScreen","reviewScreen"].forEach(screenId => {
+        document.getElementById(screenId).classList.toggle("hidden", screenId !== id);
+      });
+    }
+
+    function updateHeader() {
+      const opponent = state.match.opponent || "Opposition";
+      document.getElementById("brandSubtitle").textContent = `Wandin v ${opponent}`;
+      document.getElementById("liveMatchTitle").textContent = `Wandin v ${opponent}`;
+      document.getElementById("lastAction").textContent = state.lastActionText || "Last: none";
+      QUARTERS.forEach(q => document.getElementById(q.toLowerCase() + "Btn").classList.toggle("active", state.currentQuarter === q));
+      document.getElementById("gameFlowTab").classList.toggle("active", state.activePage === "gameFlow");
+      document.getElementById("marksTab").classList.toggle("active", state.activePage === "marksCustom");
+    }
+
+    function setPage(page) { state.activePage = page; saveState(); renderLive(); }
+    function switchQuarter(q) {
+      if (q === state.currentQuarter) return;
+      if (!confirm(`Switch to ${q}?`)) return;
+      state.currentQuarter = q; saveState(); renderLive();
+    }
+
+    function renderLive() {
+      updateHeader();
+      const container = document.getElementById("statsContainer");
+      container.innerHTML = "";
+      document.getElementById("livePageTitle").textContent = state.activePage === "gameFlow" ? "Game Flow" : "Marks / Custom";
+      const stats = STAT_DEFS.filter(stat => stat.page === state.activePage && shouldShowStat(stat));
+      let lastGroup = "";
+      stats.forEach(stat => {
+        if (stat.group !== lastGroup) {
+          const groupTitle = document.createElement("h3");
+          groupTitle.className = "section-title";
+          groupTitle.textContent = stat.group;
+          container.appendChild(groupTitle);
+          lastGroup = stat.group;
+        }
+        container.appendChild(createStatRow(stat));
+      });
+      if (state.activePage === "gameFlow" && state.activeStats.f50Entry && state.activeStats.goals && state.activeStats.behinds) {
+        container.appendChild(createEfficiencyRow());
+      }
+    }
+
+    function shouldShowStat(stat) {
+      if (!state.activeStats[stat.id]) return false;
+      if (stat.id.startsWith("custom")) return !!state.customNames[stat.id] || !!state.activeStats[stat.id];
+      return true;
+    }
+
+    function createStatRow(stat) {
+      const row = document.createElement("div");
+      row.className = "stat-row";
+      const name = document.createElement("div");
+      name.className = "stat-name";
+      name.textContent = displayName(stat);
+      row.appendChild(name);
+      row.appendChild(createCounter(stat.id, "Wandin"));
+      row.appendChild(createCounter(stat.id, "Oppo"));
+      return row;
+    }
+
+    function createCounter(statId, team) {
+      const counter = document.createElement("div");
+      counter.className = "counter";
+      const minus = document.createElement("button");
+      minus.className = "count-btn minus"; minus.textContent = "−"; minus.onclick = () => adjustCount(statId, team, -1);
+      const num = document.createElement("div");
+      num.className = "count-num"; num.textContent = state.counts[statId][state.currentQuarter][team];
+      const plus = document.createElement("button");
+      plus.className = "count-btn plus"; plus.textContent = "+"; plus.onclick = () => adjustCount(statId, team, 1);
+      counter.appendChild(minus); counter.appendChild(num); counter.appendChild(plus);
+      return counter;
+    }
+
+    function adjustCount(statId, team, change) {
+      const q = state.currentQuarter;
+      const current = state.counts[statId][q][team];
+      if (current + change < 0) return;
+      state.counts[statId][q][team] = current + change;
+      const stat = STAT_DEFS.find(s => s.id === statId);
+      const action = { timestamp: new Date().toISOString(), quarter: q, statId, statName: displayName(stat), team, change };
+      state.history.push(action);
+      state.lastActionText = `Last: ${q} ${team} ${displayName(stat)} ${change > 0 ? "+1" : "−1"}`;
+      saveState();
+      renderLive();
+    }
+
+    function undoLast() {
+      const last = state.history.pop();
+      if (!last) { alert("There is no action to undo."); return; }
+      const current = state.counts[last.statId][last.quarter][last.team];
+      state.counts[last.statId][last.quarter][last.team] = Math.max(0, current - last.change);
+      state.lastActionText = `Undid: ${last.quarter} ${last.team} ${last.statName} ${last.change > 0 ? "+1" : "−1"}`;
+      saveState();
+      renderLive();
+    }
+
+    function createEfficiencyRow() {
+      const row = document.createElement("div");
+      row.className = "eff-row";
+      const label = document.createElement("div");
+      label.className = "eff-label"; label.textContent = "Scoring Efficiency";
+      const wandin = document.createElement("div");
+      wandin.className = "eff-value"; wandin.textContent = scoringEfficiency("Wandin", state.currentQuarter);
+      const oppo = document.createElement("div");
+      oppo.className = "eff-value"; oppo.textContent = scoringEfficiency("Oppo", state.currentQuarter);
+      row.appendChild(label); row.appendChild(wandin); row.appendChild(oppo);
+      return row;
+    }
+
+    function scoringEfficiency(team, quarterOrTotal) {
+      const f50 = getValue("f50Entry", team, quarterOrTotal);
+      const goals = getValue("goals", team, quarterOrTotal);
+      const behinds = getValue("behinds", team, quarterOrTotal);
+      if (f50 === 0) return "—";
+      return `${(((goals + behinds) / f50) * 100).toFixed(1)}%`;
+    }
+
+    function getValue(statId, team, quarterOrTotal) {
+      if (quarterOrTotal === "Total") return QUARTERS.reduce((sum, q) => sum + state.counts[statId][q][team], 0);
+      return state.counts[statId][quarterOrTotal][team];
+    }
+
+    function renderReview() {
+      const container = document.getElementById("reviewSummary");
+      container.innerHTML = "";
+      ["Wandin","Oppo"].forEach(team => {
+        const card = document.createElement("div");
+        card.className = "review-card";
+        const f50 = getValue("f50Entry", team, "Total");
+        const goals = getValue("goals", team, "Total");
+        const behinds = getValue("behinds", team, "Total");
+        card.innerHTML = `<h3>${team}</h3><p>F50 Entries: ${f50}</p><p>Goals: ${goals}</p><p>Behinds: ${behinds}</p><p>Scoring Efficiency: ${scoringEfficiency(team, "Total")}</p>`;
+        container.appendChild(card);
+      });
+    }
+
+    function statHasAnyCount(statId) {
+      return QUARTERS.some(q => TEAMS.some(team => state.counts[statId][q][team] > 0));
+    }
+
+    function exportCSV() {
+      readFormIntoStateSafe();
+      const rows = [];
+      rows.push(["Section","Date","Opponent","Venue","Grade","Quarter","Stat","Team","Count"]);
+      STAT_DEFS.forEach(stat => {
+        const include = state.activeStats[stat.id] || statHasAnyCount(stat.id);
+        if (!include) return;
+        QUARTERS.forEach(q => TEAMS.forEach(team => rows.push(["Quarter Stat",state.match.date,state.match.opponent,state.match.venue,state.match.grade,q,displayName(stat),team,state.counts[stat.id][q][team]])));
+        TEAMS.forEach(team => rows.push(["Total Stat",state.match.date,state.match.opponent,state.match.venue,state.match.grade,"Total",displayName(stat),team,getValue(stat.id, team, "Total")]));
+      });
+      QUARTERS.concat(["Total"]).forEach(q => TEAMS.forEach(team => rows.push(["Calculated",state.match.date,state.match.opponent,state.match.venue,state.match.grade,q,"Scoring Efficiency %",team,scoringEfficiency(team, q)])));
+      rows.push([]);
+      rows.push(["Tap Log"]);
+      rows.push(["Timestamp","Quarter","Stat","Team","Change"]);
+      state.history.forEach(action => rows.push([action.timestamp, action.quarter, action.statName, action.team, action.change]));
+      const csv = rows.map(row => row.map(csvCell).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const safeOpponent = (state.match.opponent || "opposition").replace(/[^a-z0-9]/gi, "-").toLowerCase();
+      const filename = `wandin-stats-${state.match.date}-${safeOpponent}.csv`;
+      const a = document.createElement("a");
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function csvCell(value) {
+      const str = String(value ?? "");
+      if (str.includes(",") || str.includes('"') || str.includes("\n")) return '"' + str.replace(/"/g, '""') + '"';
+      return str;
+    }
+
+    function newMatch() {
+      if (!confirm("Start a new match? Make sure you have exported the current match first.")) return;
+      state = createFreshState(); saveState(); hydrateForm(); showSetup();
+    }
+
+    function resetApp() {
+      const typed = prompt("This will clear the current saved match from this iPad. Type RESET to continue.");
+      if (typed !== "RESET") return;
+      localStorage.removeItem(STORAGE_KEY);
+      state = createFreshState(); saveState(); hydrateForm(); showSetup();
+    }
+
+    function init() {
+      hydrateForm();
+      saveState();
+      showSetup();
+      if ("serviceWorker" in navigator) navigator.serviceWorker.register("service-worker.js").catch(() => {});
+    }
+    init();
+  </script>
+</body>
+</html>

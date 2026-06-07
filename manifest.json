@@ -1,0 +1,9 @@
+{
+  "name": "Wandin Match Stats",
+  "short_name": "Wandin Stats",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F3F5F8",
+  "theme_color": "#0057B8",
+  "description": "Simple offline match stats counter for Wandin Football Netball Club."
+}
