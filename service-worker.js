@@ -1,4 +1,4 @@
-const CACHE_NAME = "wandin-match-stats-v1";
+const CACHE_NAME = "wandin-match-stats-v2";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",

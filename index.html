@@ -222,6 +222,7 @@
       gap: 8px;
       align-items: center;
     }
+    .counter::before { display: none; content: attr(data-team); }
     .count-num {
       text-align: center;
       font-size: 29px;
@@ -267,7 +268,41 @@
       .undo-btn { grid-column: 1 / -1; }
       .table-head { display: none; }
       .stat-row, .eff-row { grid-template-columns: 1fr; gap: 10px; }
-      .counter { grid-template-columns: 70px 1fr 88px; }
+      .counter { grid-template-columns: 72px 70px 1fr 88px; }
+      .counter::before {
+        display: block;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 950;
+        text-align: right;
+        text-transform: uppercase;
+      }
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 6px; }
+      .top-brand { padding: 14px 16px; border-radius: 16px; margin-bottom: 8px; }
+      .brand-title { font-size: 22px; }
+      .brand-subtitle { font-size: 15px; }
+      .status-pill { padding: 7px 10px; font-size: 13px; }
+      .panel, .control-panel { padding: 10px; border-radius: 16px; }
+      .live-header { padding-bottom: 6px; }
+      .match-row { gap: 8px; margin-bottom: 8px; }
+      .match-title { font-size: 18px; }
+      .last-action { font-size: 13px; }
+      .quarter-row, .tab-row { gap: 6px; margin-top: 6px; }
+      .quarter-btn, .tab-btn, .undo-btn { min-height: 46px; border-radius: 11px; font-size: 17px; }
+      .page-title { font-size: 18px; margin: 12px 0 8px; }
+      .section-title { margin: 14px 0 8px; font-size: 15px; }
+      .stat-row { grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; }
+      .stat-name { grid-column: 1 / -1; font-size: 18px; text-align: center; }
+      .counter { grid-template-columns: 46px minmax(32px, 1fr) 54px; gap: 5px; }
+      .counter::before { grid-column: 1 / -1; text-align: center; font-size: 12px; }
+      .count-btn { min-height: 48px; border-radius: 10px; font-size: 27px; }
+      .count-num { font-size: 24px; }
+      .eff-row { grid-template-columns: 1fr 1fr; }
+      .eff-label { grid-column: 1 / -1; text-align: center; font-size: 18px; }
+      .eff-value { font-size: 24px; }
     }
 
     @media (orientation: portrait) { .portrait-warning { display: block; } }
@@ -287,7 +322,7 @@
 
 <body>
   <div class="app">
-    <div class="portrait-warning">For best use, turn the iPad sideways into landscape mode.</div>
+    <div class="portrait-warning">For quickest game-day use, turn your iPhone or iPad sideways into landscape mode.</div>
 
     <header class="top-brand">
       <div class="brand-row">
@@ -575,6 +610,7 @@
     function createCounter(statId, team) {
       const counter = document.createElement("div");
       counter.className = "counter";
+      counter.dataset.team = team;
       const minus = document.createElement("button");
       minus.className = "count-btn minus"; minus.textContent = "−"; minus.onclick = () => adjustCount(statId, team, -1);
       const num = document.createElement("div");
